@@ -22,7 +22,7 @@ FMCO_LOGO = "FMCO-Logo-2.png"
 QIDDIYA_LOGO = "images (1).png"
 
 # 🔗 PASTE YOUR GOOGLE WEB APP DEPLOYMENT URL HERE:
-GOOGLE_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzI-LfL3556Jhx53MsbbG2yOgaPn63D0patc19otNoSmDtNU5mVvtOQ43MV3y3p6dy65w/exec"
+GOOGLE_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxaHygGj3K14MJrlP5HNa9zmIbl4CzSgaIio0VnRh_rc3F2gL43aYqcnvzRsDhaSbnq/exec"
 
 # ==========================================
 # 2. DATABASE LOGGING FUNCTION (GOOGLE SHEETS)
@@ -46,7 +46,6 @@ class DepartureReportPDF(FPDF):
         self.room_type = room_type
 
     def header(self):
-        # Balanced top branding headers
         if os.path.exists(FMCO_LOGO):
             self.image(FMCO_LOGO, x=14, y=12, w=32)
         if os.path.exists(QIDDIYA_LOGO):
@@ -54,7 +53,7 @@ class DepartureReportPDF(FPDF):
         
         self.ln(16)
         self.set_font("Helvetica", "B", 15)
-        self.set_text_color(14, 56, 74) # Corporate Dark Teal
+        self.set_text_color(14, 56, 74) 
         self.cell(0, 8, "RESIDENT DEPARTURE & INSPECTION REPORT", ln=True, align="C")
         
         self.set_font("Helvetica", "I", 8)
@@ -63,7 +62,6 @@ class DepartureReportPDF(FPDF):
         self.cell(0, 4, f"Generated automatically on: {current_time}", ln=True, align="C")
         self.ln(4)
         
-        # Heavy accent rule line
         self.set_draw_color(14, 56, 74)
         self.set_line_width(0.8)
         self.line(12, self.get_y(), 198, self.get_y())
@@ -117,18 +115,16 @@ def send_report_via_email(pdf_filename, occupant_name, building, room):
 # ==========================================
 st.set_page_config(page_title="Departure Inspection Form", page_icon="📝", layout="centered")
 
-# Visual layout balance columns for equal size logos
 logo_col1, logo_col2, logo_col3 = st.columns([1.2, 2, 1.2])
 with logo_col1:
     if os.path.exists(FMCO_LOGO): st.image(FMCO_LOGO, width=140)
 with logo_col2:
     st.markdown("<h2 style='text-align: center; color: #0E384A; margin-top: 15px; font-size: 24px; font-weight: bold;'>Departure Inspection Report</h2>", unsafe_allow_html=True)
 with logo_col3:
-    if os.path.exists(QIDDIYA_LOGO): st.image(QIDDIYA_LOGO, width=270)
+    if os.path.exists(QIDDIYA_LOGO): st.image(QIDDIYA_LOGO, width=300)
 
 st.markdown("---")
 
-# Form inputs block setup
 with st.form("departure_form", clear_on_submit=True):
     st.subheader("🏢 Location & Occupant Core Attributes")
     col1, col2 = st.columns(2)
@@ -139,12 +135,16 @@ with st.form("departure_form", clear_on_submit=True):
         occupant_id = st.text_input("Resident ID / Serial", placeholder="e.g. 1234")
         room_no = st.text_input("Room Number", placeholder="e.g. 112")
         
-    room_type = st.radio("**Room Allocation Type**", ["Single Room", "Shared Room"], index=0, horizontal=True)
+    col_r1, col_r2 = st.columns(2)
+    with col_r1:
+        room_type = st.radio("**Room Allocation Type**", ["Single Room", "Shared Room"], index=0, horizontal=True)
+    with col_r2:
+        # 🆕 NEW RADIO SELECTION FOR DEPARTURE PROCESSING TYPE
+        departure_type = st.radio("**Departure Action Classification**", ["Internal Transfer", "Check-Out from Camp"], index=0, horizontal=True)
         
     st.markdown("---")
     st.subheader("🔍 Facility Infrastructure Checklist")
     
-    # Input bindings mapping cleanly to Google Script keys
     door_status = st.radio("**Main Door, Locks & Handles**", ["Pass (Excellent)", "Action Required (Damage/Defect)"], horizontal=True)
     wall_status = st.radio("**Wall Condition & Paint Protection**", ["Pass (Excellent)", "Action Required (Damage/Defect)"], horizontal=True)
     floor_status = st.radio("**Primary Flooring & Baseboards**", ["Pass (Excellent)", "Action Required (Damage/Defect)"], horizontal=True)
@@ -176,16 +176,15 @@ if submit_button:
     if not occupant_name or not building_no or not room_no or not inspector_signature:
         st.error("❌ Error: Fill in all mandatory field criteria.")
     else:
-        # Create unique PDF identification filename first
         timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
         pdf_filename = f"Departure_Report_{occupant_name.replace(' ', '_')}_{timestamp_str}.pdf"
         
-        # Package metrics dictionary cleanly for database integration API
         record_data = {
             "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "Occupant_Name": occupant_name, "Resident_ID": occupant_id,
             "Building_Number": building_no, "Room_Number": room_no,
-            "Room_Type": room_type, "Remarks": remarks,
+            "Room_Type": room_type, "Departure_Type": departure_type, # 🆕 Pushed to sheets
+            "Remarks": remarks,
             "Resident_Signature": resident_signature, "Inspector_Signature": inspector_signature,
             "Door_Status": door_status, "Wall_Status": wall_status, "Floor_Status": floor_status,
             "Window_Status": window_status, "AC_Status": ac_status, "Light_Status": light_status,
@@ -193,10 +192,8 @@ if submit_button:
             "Heater_Status": heater_status
         }
         
-        # Action 1: Post metadata to permanent cloud sheet row
         log_to_google_sheet(record_data)
         
-        # Action 2: Construct clean PDF framework structure
         pdf = DepartureReportPDF(room_type=room_type)
         pdf.alias_nb_pages()
         pdf.add_page()
@@ -205,52 +202,43 @@ if submit_button:
         pdf.section_heading("1. Occupant & Operational Metadata")
         pdf.set_fill_color(245, 245, 245)
         
-        # Row 1: Occupant Name & Resident ID
-        pdf.set_font("Helvetica", "B", 10)
-        pdf.set_text_color(0, 0, 0) # Black text color for label
+        # Row 1
+        pdf.set_font("Helvetica", "B", 10); pdf.set_text_color(0, 0, 0)
         pdf.cell(35, 7, "Occupant Name:", border=1, fill=True)
+        pdf.set_text_color(34, 139, 34); pdf.cell(60, 7, f" {occupant_name}", border=1)
         
-        pdf.set_font("Helvetica", "B", 10)
-        pdf.set_text_color(34, 139, 34) # Forest Green for user submission content
-        pdf.cell(60, 7, f" {occupant_name}", border=1)
-        
-        pdf.set_font("Helvetica", "B", 10)
-        pdf.set_text_color(0, 0, 0) # Reset to Black
+        pdf.set_font("Helvetica", "B", 10); pdf.set_text_color(0, 0, 0)
         pdf.cell(35, 7, "Resident ID:", border=1, fill=True)
+        pdf.set_text_color(34, 139, 34); pdf.cell(56, 7, f" {occupant_id}", border=1, ln=True)
         
-        pdf.set_font("Helvetica", "B", 10)
-        pdf.set_text_color(34, 139, 34) # Forest Green
-        pdf.cell(56, 7, f" {occupant_id}", border=1, ln=True)
-        
-        # Row 2: Building No & Room No
-        pdf.set_font("Helvetica", "B", 10)
-        pdf.set_text_color(0, 0, 0) # Reset to Black
+        # Row 2
+        pdf.set_font("Helvetica", "B", 10); pdf.set_text_color(0, 0, 0)
         pdf.cell(35, 7, "Building No:", border=1, fill=True)
+        pdf.set_text_color(34, 139, 34); pdf.cell(60, 7, f" {building_no}", border=1)
         
-        pdf.set_font("Helvetica", "B", 10)
-        pdf.set_text_color(34, 139, 34) # Forest Green
-        pdf.cell(60, 7, f" {building_no}", border=1)
-        
-        pdf.set_font("Helvetica", "B", 10)
-        pdf.set_text_color(0, 0, 0) # Reset to Black
+        pdf.set_font("Helvetica", "B", 10); pdf.set_text_color(0, 0, 0)
         pdf.cell(35, 7, "Room No:", border=1, fill=True)
+        pdf.set_text_color(34, 139, 34); pdf.cell(56, 7, f" {room_no}", border=1, ln=True)
         
-        pdf.set_font("Helvetica", "B", 10)
-        pdf.set_text_color(34, 139, 34) # Forest Green
-        pdf.cell(56, 7, f" {room_no}", border=1, ln=True)
+        # Row 3: Room Type & Departure Status Classification
+        pdf.set_font("Helvetica", "B", 10); pdf.set_text_color(0, 0, 0)
+        pdf.cell(35, 7, "Allocation Type:", border=1, fill=True)
+        pdf.set_text_color(34, 139, 34); pdf.cell(60, 7, f" {room_type}", border=1)
         
-        pdf.set_text_color(0, 0, 0) # Final reset to default black text
+        pdf.set_font("Helvetica", "B", 10); pdf.set_text_color(0, 0, 0)
+        pdf.cell(35, 7, "Departure Action:", border=1, fill=True)
+        pdf.set_text_color(34, 139, 34); pdf.cell(56, 7, f" {departure_type}", border=1, ln=True)
+        
+        pdf.set_text_color(0, 0, 0)
         pdf.ln(5)
         
         # --- SECTION 2: INFRASTRUCTURE CHECKLIST ---
         pdf.section_heading("2. Facility Infrastructure Checklist Evaluations")
-        pdf.set_font("Helvetica", "B", 10)
-        pdf.set_text_color(140, 140, 140)
+        pdf.set_font("Helvetica", "B", 10); pdf.set_text_color(140, 140, 140)
         pdf.cell(120, 6, "Evaluated Operational Asset Category", border=1, fill=True)
         pdf.cell(66, 6, "Status Verification", border=1, ln=True, fill=True)
         pdf.set_text_color(0, 0, 0)
         
-        # Mapping item displays dynamically for looping structure
         pdf_items_loop = [
             ("Main Door, Locks & Handles", door_status),
             ("Wall Condition & Paint Protection", wall_status),
@@ -268,10 +256,10 @@ if submit_button:
         for asset, status in pdf_items_loop:
             pdf.cell(120, 6, f" {asset}", border=1)
             if "Pass" in status:
-                pdf.set_text_color(34, 139, 34) # Professional green
+                pdf.set_text_color(34, 139, 34)
                 pdf.set_font("Helvetica", "B", 9)
             else:
-                pdf.set_text_color(178, 34, 34) # Alert crimson red
+                pdf.set_text_color(178, 34, 34)
                 pdf.set_font("Helvetica", "B", 9)
             pdf.cell(66, 6, f" {status}", border=1, ln=True)
             pdf.set_text_color(0, 0, 0)
@@ -291,24 +279,18 @@ if submit_button:
         pdf.cell(93, 5, "Resident Signature Confirmation:", ln=False)
         pdf.cell(93, 5, "Lead Inspector Verification Authorization:", ln=True)
         
-        pdf.set_font("Helvetica", "I", 11)
-        pdf.set_text_color(40, 40, 40)
-        # Clear field labels mapping explicitly next to the signed variables
+        pdf.set_font("Helvetica", "I", 11); pdf.set_text_color(40, 40, 40)
         pdf.cell(93, 10, f"Resident Name:  /s/ {resident_signature}", border='B')
         pdf.cell(93, 10, f"Inspector Name:  /s/ {inspector_signature}", border='B', ln=True)
         pdf.ln(8)
         
-        # Bottom decorative watermark placement
         if os.path.exists(FMCO_LOGO):
             pdf.image(FMCO_LOGO, x=78, y=pdf.get_y(), w=54)
         
-        # Save output document layout cache
         pdf.output(pdf_filename)
         
-        # Action 3: Transmit completed document via pipeline
         if send_report_via_email(pdf_filename, occupant_name, building_no, room_no):
             st.success(f"🎉 Complete structural breakdown report processed and transmitted to inbox.")
         
-        # Cleanup temporary system memory cache
         if os.path.exists(pdf_filename): 
             os.remove(pdf_filename)
