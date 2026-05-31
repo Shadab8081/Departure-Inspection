@@ -8,6 +8,7 @@ from email import encoders
 import os
 import requests
 from datetime import datetime
+from PIL import Image
 
 # ==========================================
 # 1. CONFIGURATION & CORPORATE CONSTANTS
@@ -121,7 +122,7 @@ with logo_col1:
 with logo_col2:
     st.markdown("<h2 style='text-align: center; color: #0E384A; margin-top: 15px; font-size: 24px; font-weight: bold;'>Departure Inspection Report</h2>", unsafe_allow_html=True)
 with logo_col3:
-    if os.path.exists(QIDDIYA_LOGO): st.image(QIDDIYA_LOGO, width=300)
+    if os.path.exists(QIDDIYA_LOGO): st.image(QIDDIYA_LOGO, width=120)
 
 st.markdown("---")
 
@@ -139,7 +140,6 @@ with st.form("departure_form", clear_on_submit=True):
     with col_r1:
         room_type = st.radio("**Room Allocation Type**", ["Single Room", "Shared Room"], index=0, horizontal=True)
     with col_r2:
-        # 🆕 NEW RADIO SELECTION FOR DEPARTURE PROCESSING TYPE
         departure_type = st.radio("**Departure Action Classification**", ["Internal Transfer", "Check-Out from Camp"], index=0, horizontal=True)
         
     st.markdown("---")
@@ -179,11 +179,18 @@ if submit_button:
         timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
         pdf_filename = f"Departure_Report_{occupant_name.replace(' ', '_')}_{timestamp_str}.pdf"
         
+        # Save uploaded photo to a temporary local cache file if provided
+        temp_photo_path = None
+        if uploaded_photo is not None:
+            temp_photo_path = f"temp_upload_{timestamp_str}.png"
+            image = Image.open(uploaded_photo)
+            image.save(temp_photo_path)
+        
         record_data = {
             "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "Occupant_Name": occupant_name, "Resident_ID": occupant_id,
             "Building_Number": building_no, "Room_Number": room_no,
-            "Room_Type": room_type, "Departure_Type": departure_type, # 🆕 Pushed to sheets
+            "Room_Type": room_type, "Departure_Type": departure_type,
             "Remarks": remarks,
             "Resident_Signature": resident_signature, "Inspector_Signature": inspector_signature,
             "Door_Status": door_status, "Wall_Status": wall_status, "Floor_Status": floor_status,
@@ -220,7 +227,7 @@ if submit_button:
         pdf.cell(35, 7, "Room No:", border=1, fill=True)
         pdf.set_text_color(34, 139, 34); pdf.cell(56, 7, f" {room_no}", border=1, ln=True)
         
-        # Row 3: Room Type & Departure Status Classification
+        # Row 3
         pdf.set_font("Helvetica", "B", 10); pdf.set_text_color(0, 0, 0)
         pdf.cell(35, 7, "Allocation Type:", border=1, fill=True)
         pdf.set_text_color(34, 139, 34); pdf.cell(60, 7, f" {room_type}", border=1)
@@ -279,18 +286,35 @@ if submit_button:
         pdf.cell(93, 5, "Resident Signature Confirmation:", ln=False)
         pdf.cell(93, 5, "Lead Inspector Verification Authorization:", ln=True)
         
-        pdf.set_font("Helvetica", "I", 11); pdf.set_text_color(40, 40, 40)
-        pdf.cell(93, 10, f"Resident Name:  /s/ {resident_signature}", border='B')
-        pdf.cell(93, 10, f"Inspector Name:  /s/ {inspector_signature}", border='B', ln=True)
-        pdf.ln(8)
+        # Line 1: Static Labels in Black
+        pdf.set_font("Helvetica", "B", 10); pdf.set_text_color(0, 0, 0)
+        pdf.cell(15, 10, "Resident Name: ", ln=False)
+        # Signed value in Green
+        pdf.set_font("Helvetica", "I", 11); pdf.set_text_color(34, 139, 34)
+        pdf.cell(78, 10, f" /s/ {resident_signature}", border='B', ln=False)
         
-        if os.path.exists(FMCO_LOGO):
-            pdf.image(FMCO_LOGO, x=78, y=pdf.get_y(), w=54)
+        # Inspector Label in Black
+        pdf.set_font("Helvetica", "B", 10); pdf.set_text_color(0, 0, 0)
+        pdf.cell(15, 10, " Inspector Name: ", ln=False)
+        # Inspector value in Blue
+        pdf.set_font("Helvetica", "I", 11); pdf.set_text_color(0, 102, 204)
+        pdf.cell(78, 10, f" /s/ {inspector_signature}", border='B', ln=True)
+        pdf.ln(10)
+        
+        # --- SECTION 5: DYNAMIC PHOTO ATTACHMENT FEATURE ---
+        if temp_photo_path and os.path.exists(temp_photo_path):
+            pdf.section_heading("5. Attached Room Condition Media Feature")
+            pdf.ln(4)
+            # Fits the uploaded photo cleanly within width guidelines
+            pdf.image(temp_photo_path, x=45, y=pdf.get_y(), w=120)
         
         pdf.output(pdf_filename)
         
         if send_report_via_email(pdf_filename, occupant_name, building_no, room_no):
             st.success(f"🎉 Complete structural breakdown report processed and transmitted to inbox.")
         
+        # Cleanup temporary image and pdf cache files
         if os.path.exists(pdf_filename): 
             os.remove(pdf_filename)
+        if temp_photo_path and os.path.exists(temp_photo_path):
+            os.remove(temp_photo_path)
