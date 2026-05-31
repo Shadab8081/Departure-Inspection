@@ -146,11 +146,11 @@ with st.form("departure_form", clear_on_submit=True):
     with col3: resident_signature = st.text_input("Resident Signature (Type Name)")
     with col4: inspector_signature = st.text_input("Lead Inspector Signature (Type Name)")
 
-    if st.form_submit_button("Submit Formal Report"):
+  if st.form_submit_button("Submit Formal Report"):
         if not occupant_name or not building_no or not room_no or not inspector_signature:
             st.error("❌ Error: Fill in all mandatory field criteria.")
         else:
-            # Map values for API delivery
+            # 1. ORGANIZE DATA VARIABLES
             record_data = {
                 "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "Occupant_Name": occupant_name, "Resident_ID": occupant_id,
@@ -169,34 +169,35 @@ with st.form("departure_form", clear_on_submit=True):
                 "Heater_Status": checklist_selections["Water Heater Functionality"]
             }
             
-            # 1. Post to cloud sheet
+            # 2. CHOOSE THE UNIQUE FILENAME FOR THE PDF FIRST
+            timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+            pdf_filename = f"Departure_Report_{occupant_name.replace(' ', '_')}_{timestamp_str}.pdf"
+            
+            # 3. LOG DATA TO GOOGLE SHEETS
             log_to_google_sheet(record_data)
             
-            # 2. Re-compile high-fidelity PDF layout
+            # 4. BUILD AND BUILD THE HIGH-FIDELITY PDF LAYOUT
             pdf = DepartureReportPDF(room_type=room_type)
             pdf.alias_nb_pages()
             pdf.add_page()
             
-            # SECTION 1: METADATA GRID
+            # --- SECTION 1: METADATA GRID ---
             pdf.section_heading("1. Occupant & Operational Metadata")
             pdf.set_font("Helvetica", "B", 10)
             pdf.set_fill_color(245, 245, 245)
             
-            # Left block
             pdf.cell(35, 7, "Occupant Name:", border=1, fill=True)
             pdf.set_font("Helvetica", "", 10); pdf.cell(60, 7, f" {occupant_name}", border=1)
-            # Right block
             pdf.set_font("Helvetica", "B", 10); pdf.cell(35, 7, "Resident ID:", border=1, fill=True)
             pdf.set_font("Helvetica", "", 10); pdf.cell(56, 7, f" {occupant_id}", border=1, ln=True)
             
-            # Row 2
             pdf.set_font("Helvetica", "B", 10); pdf.cell(35, 7, "Building No:", border=1, fill=True)
             pdf.set_font("Helvetica", "", 10); pdf.cell(60, 7, f" {building_no}", border=1)
             pdf.set_font("Helvetica", "B", 10); pdf.cell(35, 7, "Room No:", border=1, fill=True)
             pdf.set_font("Helvetica", "", 10); pdf.cell(56, 7, f" {room_no}", border=1, ln=True)
             pdf.ln(5)
             
-            # SECTION 2: CHECKLIST
+            # --- SECTION 2: CHECKLIST ---
             pdf.section_heading("2. Facility Infrastructure Checklist Evaluations")
             pdf.set_font("Helvetica", "B", 10)
             pdf.set_text_color(140, 140, 140)
@@ -207,27 +208,24 @@ with st.form("departure_form", clear_on_submit=True):
             pdf.set_font("Helvetica", "", 9)
             for asset, status in checklist_selections.items():
                 pdf.cell(120, 6, f" {asset}", border=1)
-                
-                # Dynamic conditional coloring (Green for Pass, Red for Action Required)
                 if "Pass" in status:
                     pdf.set_text_color(34, 139, 34)
                     pdf.set_font("Helvetica", "B", 9)
                 else:
                     pdf.set_text_color(178, 34, 34)
                     pdf.set_font("Helvetica", "B", 9)
-                    
                 pdf.cell(66, 6, f" {status}", border=1, ln=True)
                 pdf.set_text_color(0, 0, 0)
                 pdf.set_font("Helvetica", "", 9)
             pdf.ln(5)
             
-            # SECTION 3: FIELD INSPECTION REMARKS
+            # --- SECTION 3: FIELD INSPECTION REMARKS ---
             pdf.section_heading("3. Additional Field Inspection Remarks")
             pdf.set_font("Helvetica", "", 9)
             pdf.multi_cell(0, 6, f" {remarks if remarks else 'No structural deficiencies or critical anomalies noted at evaluation timestamp.'}", border=1)
             pdf.ln(5)
             
-            # SECTION 4: SIGNATURE BLOCKS / BRANDING BASE
+            # --- SECTION 4: SIGNATURE BLOCKS ---
             pdf.section_heading("4. Signatures & Attestation")
             pdf.ln(2)
             pdf.set_font("Helvetica", "B", 9)
@@ -240,16 +238,15 @@ with st.form("departure_form", clear_on_submit=True):
             pdf.cell(93, 10, f"   /s/ {inspector_signature}", border='B', ln=True)
             pdf.ln(8)
             
-            # Bottom Center Watermark logo branding from previous framework
             if os.path.exists(FMCO_LOGO):
                 pdf.image(FMCO_LOGO, x=78, y=pdf.get_y(), w=54)
             
-            # Process output and send email
-            timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
-            pdf_filename = f"Departure_Report_{occupant_name.replace(' ', '_')}_{timestamp_str}.pdf"
+            # 5. NOW OUTPUT THE COMPLETED FILE TO DISK
             pdf.output(pdf_filename)
             
+            # 6. SEND EMAIL ENGINE NOW THAT ALL FILENAMES ARE ASSIGNED
             if send_report_via_email(pdf_filename, occupant_name, building_no, room_no):
                 st.success(f"🎉 Complete structural breakdown report processed and transmitted to inbox.")
+            
             if os.path.exists(pdf_filename): 
                 os.remove(pdf_filename)
