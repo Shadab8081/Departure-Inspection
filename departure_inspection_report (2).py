@@ -118,7 +118,7 @@ st.set_page_config(page_title="Departure Inspection Form", page_icon="📝", lay
 
 logo_col1, logo_col2, logo_col3 = st.columns([1.2, 2, 1.2])
 with logo_col1:
-    if os.path.exists(FMCO_LOGO): st.image(FMCO_LOGO, width=110)
+    if os.path.exists(FMCO_LOGO): st.image(FMCO_LOGO, width=140)
 with logo_col2:
     st.markdown("<h2 style='text-align: center; color: #0E384A; margin-top: 15px; font-size: 24px; font-weight: bold;'>Departure Inspection Report</h2>", unsafe_allow_html=True)
 with logo_col3:
@@ -157,7 +157,8 @@ with st.form("departure_form", clear_on_submit=True):
     heater_status = st.radio("**Water Heater Functionality**", ["Pass (Excellent)", "Action Required (Damage/Defect)"], horizontal=True)
 
     st.markdown("---")
-    uploaded_photo = st.file_uploader("Upload Room Condition Photo (Optional)", type=["png", "jpg", "jpeg"])
+    # 🆕 ACCEPT MULTIPLE LOGGED FILES WITH accept_multiple_files=True
+    uploaded_photos = st.file_uploader("Upload Room Condition Photos (Optional)", type=["png", "jpg", "jpeg"], accept_multiple_files=True)
     remarks = st.text_area("Additional Field Observations")
     
     col3, col4 = st.columns(2)
@@ -179,11 +180,14 @@ if submit_button:
         timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
         pdf_filename = f"Departure_Report_{occupant_name.replace(' ', '_')}_{timestamp_str}.pdf"
         
-        temp_photo_path = None
-        if uploaded_photo is not None:
-            temp_photo_path = f"temp_upload_{timestamp_str}.png"
-            image = Image.open(uploaded_photo)
-            image.save(temp_photo_path)
+        # Array tracking all local cache locations for deletion cleanup afterward
+        temp_photo_paths = []
+        if uploaded_photos:
+            for idx, uploaded_photo in enumerate(uploaded_photos):
+                path = f"temp_upload_{timestamp_str}_{idx}.png"
+                image = Image.open(uploaded_photo)
+                image.save(path)
+                temp_photo_paths.append(path)
         
         record_data = {
             "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -286,18 +290,16 @@ if submit_button:
         pdf.cell(93, 5, "Lead Inspector Verification Authorization:", ln=True)
         pdf.ln(2)
         
-        # --- FIXED ALIGNMENT ENGINE BLOCK ---
-        # 1. Left Block: Resident
+        # Left Block: Resident
         pdf.set_font("Helvetica", "B", 10); pdf.set_text_color(0, 0, 0)
         pdf.cell(28, 10, "Resident Name:", border='B', ln=False)
         
         pdf.set_font("Helvetica", "I", 11); pdf.set_text_color(34, 139, 34)
         pdf.cell(60, 10, f"  /s/ {resident_signature}", border='B', ln=False)
         
-        # Spacing buffer between blocks
         pdf.cell(10, 10, "", ln=False)
         
-        # 2. Right Block: Inspector
+        # Right Block: Inspector
         pdf.set_font("Helvetica", "B", 10); pdf.set_text_color(0, 0, 0)
         pdf.cell(28, 10, "Inspector Name:", border='B', ln=False)
         
@@ -305,18 +307,30 @@ if submit_button:
         pdf.cell(60, 10, f"  /s/ {inspector_signature}", border='B', ln=True)
         pdf.ln(10)
         
-        # --- SECTION 5: DYNAMIC PHOTO ATTACHMENT FEATURE ---
-        if temp_photo_path and os.path.exists(temp_photo_path):
+        # --- SECTION 5: MULTIPLE PHOTO ATTACHMENT LOOP ---
+        if temp_photo_paths:
             pdf.section_heading("5. Attached Room Condition Media Feature")
-            pdf.ln(4)
-            pdf.image(temp_photo_path, x=45, y=pdf.get_y(), w=120)
+            pdf.ln(2)
+            
+            for path in temp_photo_paths:
+                if os.path.exists(path):
+                    # Check if rendering the image will run off the current page layout boundaries
+                    if pdf.get_y() + 85 > 270:
+                        pdf.add_page()
+                    else:
+                        pdf.ln(2)
+                    
+                    pdf.image(path, x=45, y=pdf.get_y(), w=120)
+                    pdf.set_y(pdf.get_y() + 85) # Update layout pointer spacing cleanly past image depth
         
         pdf.output(pdf_filename)
         
         if send_report_via_email(pdf_filename, occupant_name, building_no, room_no):
             st.success(f"🎉 Complete structural breakdown report processed and transmitted to inbox.")
         
+        # Clean up all created file assets from local directory cache
         if os.path.exists(pdf_filename): 
             os.remove(pdf_filename)
-        if temp_photo_path and os.path.exists(temp_photo_path):
-            os.remove(temp_photo_path)
+        for path in temp_photo_paths:
+            if os.path.exists(path):
+                os.remove(path)
