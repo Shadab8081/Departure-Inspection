@@ -118,11 +118,11 @@ st.set_page_config(page_title="Departure Inspection Form", page_icon="📝", lay
 
 logo_col1, logo_col2, logo_col3 = st.columns([1.2, 2, 1.2])
 with logo_col1:
-    if os.path.exists(FMCO_LOGO): st.image(FMCO_LOGO, width=140)
+    if os.path.exists(FMCO_LOGO): st.image(FMCO_LOGO, width=110)
 with logo_col2:
     st.markdown("<h2 style='text-align: center; color: #0E384A; margin-top: 15px; font-size: 24px; font-weight: bold;'>Departure Inspection Report</h2>", unsafe_allow_html=True)
 with logo_col3:
-    if os.path.exists(QIDDIYA_LOGO): st.image(QIDDIYA_LOGO, width=300)
+    if os.path.exists(QIDDIYA_LOGO): st.image(QIDDIYA_LOGO, width=140)
 
 st.markdown("---")
 
@@ -179,7 +179,6 @@ if submit_button:
         timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
         pdf_filename = f"Departure_Report_{occupant_name.replace(' ', '_')}_{timestamp_str}.pdf"
         
-        # Save uploaded photo to a temporary local cache file if provided
         temp_photo_path = None
         if uploaded_photo is not None:
             temp_photo_path = f"temp_upload_{timestamp_str}.png"
@@ -211,8 +210,8 @@ if submit_button:
         
         # Row 1
         pdf.set_font("Helvetica", "B", 10); pdf.set_text_color(0, 0, 0)
-        pdf.cell(35, 7, "Occupant Name:", border=1, fill=True)
-        pdf.set_text_color(34, 139, 34); pdf.cell(60, 7, f" {occupant_name}", border=1)
+        pdf.cell(38, 7, "Occupant Name:", border=1, fill=True)
+        pdf.set_text_color(34, 139, 34); pdf.cell(57, 7, f" {occupant_name}", border=1)
         
         pdf.set_font("Helvetica", "B", 10); pdf.set_text_color(0, 0, 0)
         pdf.cell(35, 7, "Resident ID:", border=1, fill=True)
@@ -220,8 +219,8 @@ if submit_button:
         
         # Row 2
         pdf.set_font("Helvetica", "B", 10); pdf.set_text_color(0, 0, 0)
-        pdf.cell(35, 7, "Building No:", border=1, fill=True)
-        pdf.set_text_color(34, 139, 34); pdf.cell(60, 7, f" {building_no}", border=1)
+        pdf.cell(38, 7, "Building No:", border=1, fill=True)
+        pdf.set_text_color(34, 139, 34); pdf.cell(57, 7, f" {building_no}", border=1)
         
         pdf.set_font("Helvetica", "B", 10); pdf.set_text_color(0, 0, 0)
         pdf.cell(35, 7, "Room No:", border=1, fill=True)
@@ -229,8 +228,8 @@ if submit_button:
         
         # Row 3
         pdf.set_font("Helvetica", "B", 10); pdf.set_text_color(0, 0, 0)
-        pdf.cell(35, 7, "Allocation Type:", border=1, fill=True)
-        pdf.set_text_color(34, 139, 34); pdf.cell(60, 7, f" {room_type}", border=1)
+        pdf.cell(38, 7, "Allocation Type:", border=1, fill=True)
+        pdf.set_text_color(34, 139, 34); pdf.cell(57, 7, f" {room_type}", border=1)
         
         pdf.set_font("Helvetica", "B", 10); pdf.set_text_color(0, 0, 0)
         pdf.cell(35, 7, "Departure Action:", border=1, fill=True)
@@ -285,27 +284,31 @@ if submit_button:
         pdf.set_font("Helvetica", "B", 9)
         pdf.cell(93, 5, "Resident Signature Confirmation:", ln=False)
         pdf.cell(93, 5, "Lead Inspector Verification Authorization:", ln=True)
+        pdf.ln(2)
         
-        # Line 1: Static Labels in Black
+        # --- FIXED ALIGNMENT ENGINE BLOCK ---
+        # 1. Left Block: Resident
         pdf.set_font("Helvetica", "B", 10); pdf.set_text_color(0, 0, 0)
-        pdf.cell(15, 10, "Resident Name: ", ln=False)
-        # Signed value in Green
+        pdf.cell(28, 10, "Resident Name:", border='B', ln=False)
+        
         pdf.set_font("Helvetica", "I", 11); pdf.set_text_color(34, 139, 34)
-        pdf.cell(78, 10, f" /s/ {resident_signature}", border='B', ln=False)
+        pdf.cell(60, 10, f"  /s/ {resident_signature}", border='B', ln=False)
         
-        # Inspector Label in Black
+        # Spacing buffer between blocks
+        pdf.cell(10, 10, "", ln=False)
+        
+        # 2. Right Block: Inspector
         pdf.set_font("Helvetica", "B", 10); pdf.set_text_color(0, 0, 0)
-        pdf.cell(15, 10, " Inspector Name: ", ln=False)
-        # Inspector value in Blue
+        pdf.cell(28, 10, "Inspector Name:", border='B', ln=False)
+        
         pdf.set_font("Helvetica", "I", 11); pdf.set_text_color(0, 102, 204)
-        pdf.cell(78, 10, f" /s/ {inspector_signature}", border='B', ln=True)
+        pdf.cell(60, 10, f"  /s/ {inspector_signature}", border='B', ln=True)
         pdf.ln(10)
         
         # --- SECTION 5: DYNAMIC PHOTO ATTACHMENT FEATURE ---
         if temp_photo_path and os.path.exists(temp_photo_path):
             pdf.section_heading("5. Attached Room Condition Media Feature")
             pdf.ln(4)
-            # Fits the uploaded photo cleanly within width guidelines
             pdf.image(temp_photo_path, x=45, y=pdf.get_y(), w=120)
         
         pdf.output(pdf_filename)
@@ -313,7 +316,6 @@ if submit_button:
         if send_report_via_email(pdf_filename, occupant_name, building_no, room_no):
             st.success(f"🎉 Complete structural breakdown report processed and transmitted to inbox.")
         
-        # Cleanup temporary image and pdf cache files
         if os.path.exists(pdf_filename): 
             os.remove(pdf_filename)
         if temp_photo_path and os.path.exists(temp_photo_path):
