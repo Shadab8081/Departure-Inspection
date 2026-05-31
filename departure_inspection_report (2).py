@@ -157,7 +157,6 @@ with st.form("departure_form", clear_on_submit=True):
     heater_status = st.radio("**Water Heater Functionality**", ["Pass (Excellent)", "Action Required (Damage/Defect)"], horizontal=True)
 
     st.markdown("---")
-    # 🆕 ACCEPT MULTIPLE LOGGED FILES WITH accept_multiple_files=True
     uploaded_photos = st.file_uploader("Upload Room Condition Photos (Optional)", type=["png", "jpg", "jpeg"], accept_multiple_files=True)
     remarks = st.text_area("Additional Field Observations")
     
@@ -180,7 +179,6 @@ if submit_button:
         timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
         pdf_filename = f"Departure_Report_{occupant_name.replace(' ', '_')}_{timestamp_str}.pdf"
         
-        # Array tracking all local cache locations for deletion cleanup afterward
         temp_photo_paths = []
         if uploaded_photos:
             for idx, uploaded_photo in enumerate(uploaded_photos):
@@ -278,8 +276,10 @@ if submit_button:
         
         # --- SECTION 3: RECTIFICATION FIELD REMARKS ---
         pdf.section_heading("3. Additional Field Inspection Remarks")
+        # 🛡️ FIX: Explicitly set text color to solid black before printing observations!
         pdf.set_font("Helvetica", "", 9)
-        pdf.multi_cell(0, 6, f" {remarks if remarks else 'No structural deficiencies or critical anomalies noted at evaluation timestamp.'}", border=1)
+        pdf.set_text_color(0, 0, 0) 
+        pdf.multi_cell(0, 6, f" {remarks if remarks.strip() else 'No structural deficiencies or critical anomalies noted at evaluation timestamp.'}", border=1)
         pdf.ln(5)
         
         # --- SECTION 4: AUTHORIZED ATTESTATION ---
@@ -314,21 +314,19 @@ if submit_button:
             
             for path in temp_photo_paths:
                 if os.path.exists(path):
-                    # Check if rendering the image will run off the current page layout boundaries
                     if pdf.get_y() + 85 > 270:
                         pdf.add_page()
                     else:
                         pdf.ln(2)
                     
                     pdf.image(path, x=45, y=pdf.get_y(), w=120)
-                    pdf.set_y(pdf.get_y() + 85) # Update layout pointer spacing cleanly past image depth
+                    pdf.set_y(pdf.get_y() + 85)
         
         pdf.output(pdf_filename)
         
         if send_report_via_email(pdf_filename, occupant_name, building_no, room_no):
             st.success(f"🎉 Complete structural breakdown report processed and transmitted to inbox.")
         
-        # Clean up all created file assets from local directory cache
         if os.path.exists(pdf_filename): 
             os.remove(pdf_filename)
         for path in temp_photo_paths:
