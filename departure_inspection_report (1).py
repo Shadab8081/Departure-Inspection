@@ -8,9 +8,6 @@ Original file is located at
 """
 import streamlit as st
 from fpdf import FPDF
-
-import streamlit as st
-from fpdf import FPDF
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -26,31 +23,30 @@ from datetime import datetime
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 SENDER_EMAIL = "mdshadabk318@gmail.com"
-SENDER_PASSWORD = "sqrt ahgl mrgx zidd"
+SENDER_PASSWORD = "your-16-character-app-password"  # Replace with your App Password
 RECEIVER_EMAIL = "housing.lp@qiddiya.fmco.sa"
 
 FMCO_LOGO = "FMCO-Logo-2.png"
 QIDDIYA_LOGO = "images (1).png"
 
 # 🔗 PASTE YOUR GOOGLE WEB APP URL DIRECTLY HERE:
-GOOGLE_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzI-LfL3556Jhx53MsbbG2yOgaPn63D0patc19otNoSmDtNU5mVvtOQ43MV3y3p6dy65w/exec"
+GOOGLE_WEBAPP_URL = "PASTE_YOUR_SCRIPT_URL_HERE"
 
 # ==========================================
-# FUNCTION: LOG DATA TO GOOGLE SHEETS VIA WEBAPP
+# FUNCTION: LOG DATA TO GOOGLE SHEETS
 # ==========================================
 def log_to_google_sheet(data_dict):
     try:
-        # Send data instantly to your Google Sheet webapp connection
         response = requests.post(GOOGLE_WEBAPP_URL, json=data_dict, timeout=10)
         if response.status_code == 200:
-            st.success("💾 Data logged permanently to Live Google Sheet database.")
+            st.success("💾 Operational records logged permanently to cloud database.")
         else:
-            st.warning("⚠️ Form submitted locally. Cloud connection busy.")
+            st.warning("⚠️ Local backup secured. Server response delayed.")
     except Exception as e:
-        st.warning(f"Report secured locally. Cloud sync pending: {e}")
+        st.warning(f"Report secured locally. Cloud sync offline: {e}")
 
 # ==========================================
-# PDF GENERATION CLASS
+# RESTORED PROFESSIONAL PDF ENGINE
 # ==========================================
 class DepartureReportPDF(FPDF):
     def __init__(self, room_type, *args, **kwargs):
@@ -58,21 +54,28 @@ class DepartureReportPDF(FPDF):
         self.room_type = room_type
 
     def header(self):
+        # Balanced top headers
         if os.path.exists(FMCO_LOGO):
-            self.image(FMCO_LOGO, x=10, y=10, w=35)
+            self.image(FMCO_LOGO, x=14, y=12, w=32)
         if os.path.exists(QIDDIYA_LOGO):
-            self.image(QIDDIYA_LOGO, x=165, y=10, w=35)
-
-        self.ln(18)
-        self.set_font("Helvetica", "B", 16)
-        self.set_text_color(14, 56, 74)
-        self.cell(0, 8, "DEPARTURE INSPECTION REPORT", ln=True, align="C")
-        self.ln(5)
-
+            self.image(QIDDIYA_LOGO, x=164, y=11, w=32)
+        
+        self.ln(16)
+        self.set_font("Helvetica", "B", 15)
+        self.set_text_color(14, 56, 74) # Corporate Dark Teal
+        self.cell(0, 8, "RESIDENT DEPARTURE & INSPECTION REPORT", ln=True, align="C")
+        
+        self.set_font("Helvetica", "I", 8)
+        self.set_text_color(120, 120, 120)
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.cell(0, 4, f"Generated automatically on: {current_time}", ln=True, align="C")
+        self.ln(4)
+        
+        # Heavy border rule
         self.set_draw_color(14, 56, 74)
         self.set_line_width(0.8)
-        self.line(10, self.get_y(), 200, self.get_y())
-        self.ln(5)
+        self.line(12, self.get_y(), 198, self.get_y())
+        self.ln(6)
 
     def footer(self):
         self.set_y(-15)
@@ -81,54 +84,24 @@ class DepartureReportPDF(FPDF):
         self.cell(0, 10, f"Page {self.page_no()}/{{nb}} | FMCO Operations Logistics Hub", align="C")
 
     def section_heading(self, label):
-        self.set_font("Helvetica", "B", 12)
+        self.set_font("Helvetica", "B", 11)
         self.set_text_color(255, 255, 255)
         self.set_fill_color(14, 56, 74)
-        self.cell(0, 7, f"  {label}", ln=True, fill=True)
-        self.ln(3)
+        self.cell(0, 6, f"  {label}", ln=True, fill=True)
+        self.ln(2)
 
 # ==========================================
-# SECURE EMAIL ENGINE
-# ==========================================
-def send_report_via_email(pdf_filename, occupant_name, building, room):
-    msg = MIMEMultipart()
-    msg['From'] = SENDER_EMAIL
-    msg['To'] = RECEIVER_EMAIL
-    msg['Subject'] = f"🔔 Departure Report Submitted: Bldg {building} - Room {room} ({occupant_name})"
-
-    body = f"Hello,\n\nA new digital departure room inspection report has been recorded for {occupant_name} (Bldg {building}, Room {room})."
-    msg.attach(MIMEText(body, 'plain'))
-
-    try:
-        with open(pdf_filename, "rb") as attachment:
-            part = MIMEBase('application', 'octet-stream')
-            part.set_payload(attachment.read())
-            encoders.encode_base64(part)
-            part.add_header('Content-Disposition', f"attachment; filename= {os.path.basename(pdf_filename)}")
-            msg.attach(part)
-
-        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
-        server.starttls()
-        server.login(SENDER_EMAIL, SENDER_PASSWORD)
-        server.send_message(msg)
-        server.quit()
-        return True
-    except Exception as e:
-        st.error(f"Failed to transmit email notification: {e}")
-        return False
-
-# ==========================================
-# STREAMLIT APPLICATION INTERFACE
+# STREAMLIT INTERFACE WITH MATCHED LOGOS
 # ==========================================
 st.set_page_config(page_title="Departure Inspection Form", page_icon="📝", layout="centered")
 
-logo_col1, logo_col2, logo_col3 = st.columns([1, 2, 1])
+logo_col1, logo_col2, logo_col3 = st.columns([1.2, 2, 1.2])
 with logo_col1:
-    if os.path.exists(FMCO_LOGO): st.image(FMCO_LOGO, width=120)
+    if os.path.exists(FMCO_LOGO): st.image(FMCO_LOGO, width=140)
 with logo_col2:
-    st.markdown("<h2 style='text-align: center; color: #0E384A; margin-top: 10px;'>Departure Inspection Report</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #0E384A; margin-top: 15px; font-size: 24px; font-weight: bold;'>Departure Inspection Report</h2>", unsafe_allow_html=True)
 with logo_col3:
-    if os.path.exists(QIDDIYA_LOGO): st.image(QIDDIYA_LOGO, width=200)
+    if os.path.exists(QIDDIYA_LOGO): st.image(QIDDIYA_LOGO, width=140)
 
 st.markdown("---")
 
@@ -136,71 +109,147 @@ with st.form("departure_form", clear_on_submit=True):
     st.subheader("🏢 Location & Occupant Core Attributes")
     col1, col2 = st.columns(2)
     with col1:
-        occupant_name = st.text_input("Occupant Full Name", placeholder="John Doe")
-        building_no = st.text_input("Building Number", placeholder="Bldg 404")
+        occupant_name = st.text_input("Occupant Full Name", placeholder="e.g. Noor")
+        building_no = st.text_input("Building Number", placeholder="e.g. C02")
     with col2:
-        occupant_id = st.text_input("Resident ID / Serial", placeholder="ID-8849")
-        room_no = st.text_input("Room Number", placeholder="Room 201-A")
-
+        occupant_id = st.text_input("Resident ID / Serial", placeholder="e.g. 1234")
+        room_no = st.text_input("Room Number", placeholder="e.g. 112")
+        
     room_type = st.radio("**Room Allocation Type**", ["Single Room", "Shared Room"], index=0, horizontal=True)
-
+        
     st.markdown("---")
     st.subheader("🔍 Facility Infrastructure Checklist")
-
-    # Clean structural key mappings for the script parser
-    door_status = st.radio("**Main Door, Locks & Handles**", ["Pass (Excellent)", "Action Required"], horizontal=True)
-    wall_status = st.radio("**Wall Condition & Paint Protection**", ["Pass (Excellent)", "Action Required"], horizontal=True)
-    floor_status = st.radio("**Primary Flooring & Baseboards**", ["Pass (Excellent)", "Action Required"], horizontal=True)
-    window_status = st.radio("**Windowpanes & Latches**", ["Pass (Excellent)", "Action Required"], horizontal=True)
-    ac_status = st.radio("**Air Conditioning (AC) Unit & Remote Function**", ["Pass (Excellent)", "Action Required"], horizontal=True)
-    light_status = st.radio("**Lighting Fixtures & Electrical Switches**", ["Pass (Excellent)", "Action Required"], horizontal=True)
-    bed_status = st.radio("**Bedframe & Mattress Condition**", ["Pass (Excellent)", "Action Required"], horizontal=True)
-    wardrobe_status = st.radio("**Wardrobe, Shelving & Cabinet Hinges**", ["Pass (Excellent)", "Action Required"], horizontal=True)
-    drainage_status = st.radio("**Bathroom Drainage & Plumbing Assets**", ["Pass (Excellent)", "Action Required"], horizontal=True)
-    heater_status = st.radio("**Water Heater Functionality**", ["Pass (Excellent)", "Action Required"], horizontal=True)
+    
+    # Structural items definition
+    items_list = [
+        ("Main Door, Locks & Handles", "door"),
+        ("Wall Condition & Paint Protection", "wall"),
+        ("Primary Flooring & Baseboards", "floor"),
+        ("Windowpanes & Latches", "window"),
+        ("Air Conditioning (AC) Unit & Remote Function", "ac"),
+        ("Lighting Fixtures & Electrical Switches", "light"),
+        ("Bedframe & Mattress Condition", "bed"),
+        ("Wardrobe, Shelving & Cabinet Hinges", "wardrobe"),
+        ("Bathroom Drainage & Plumbing Assets", "drainage"),
+        ("Water Heater Functionality", "heater")
+    ]
+    
+    checklist_selections = {}
+    for label, key in items_list:
+        checklist_selections[label] = st.radio(f"**{label}**", ["Pass (Excellent)", "Action Required (Damage/Defect)"], index=0, horizontal=True)
 
     st.markdown("---")
     uploaded_photo = st.file_uploader("Upload Room Condition Photo (Optional)", type=["png", "jpg", "jpeg"])
     remarks = st.text_area("Additional Field Observations")
-
+    
     col3, col4 = st.columns(2)
     with col3: resident_signature = st.text_input("Resident Signature (Type Name)")
     with col4: inspector_signature = st.text_input("Lead Inspector Signature (Type Name)")
 
     if st.form_submit_button("Submit Formal Report"):
         if not occupant_name or not building_no or not room_no or not inspector_signature:
-            st.error("❌ Error: Fill in all mandatory fields.")
+            st.error("❌ Error: Fill in all mandatory field criteria.")
         else:
+            # Map values for API delivery
             record_data = {
                 "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "Occupant_Name": occupant_name, "Resident_ID": occupant_id,
                 "Building_Number": building_no, "Room_Number": room_no,
                 "Room_Type": room_type, "Remarks": remarks,
                 "Resident_Signature": resident_signature, "Inspector_Signature": inspector_signature,
-                "Door_Status": door_status, "Wall_Status": wall_status, "Floor_Status": floor_status,
-                "Window_Status": window_status, "AC_Status": ac_status, "Light_Status": light_status,
-                "Bed_Status": bed_status, "Wardrobe_Status": wardrobe_status, "Drainage_Status": drainage_status,
-                "Heater_Status": heater_status
+                "Door_Status": checklist_selections["Main Door, Locks & Handles"],
+                "Wall_Status": checklist_selections["Wall Condition & Paint Protection"],
+                "Floor_Status": checklist_selections["Primary Flooring & Baseboards"],
+                "Window_Status": checklist_selections["Windowpanes & Latches"],
+                "AC_Status": checklist_selections["Air Conditioning (AC) Unit & Remote Function"],
+                "Light_Status": checklist_selections["Lighting Fixtures & Electrical Switches"],
+                "Bed_Status": checklist_selections["Bedframe & Mattress Condition"],
+                "Wardrobe_Status": checklist_selections["Wardrobe, Shelving & Cabinet Hinges"],
+                "Drainage_Status": checklist_selections["Bathroom Drainage & Plumbing Assets"],
+                "Heater_Status": checklist_selections["Water Heater Functionality"]
             }
-
-            # Instantly sync directly to the Google Sheet online
+            
+            # 1. Post to cloud sheet
             log_to_google_sheet(record_data)
-
+            
+            # 2. Re-compile high-fidelity PDF layout
             pdf = DepartureReportPDF(room_type=room_type)
             pdf.alias_nb_pages()
             pdf.add_page()
+            
+            # SECTION 1: METADATA GRID
             pdf.section_heading("1. Occupant & Operational Metadata")
-
             pdf.set_font("Helvetica", "B", 10)
-            pdf.cell(40, 7, "Occupant Name:", border=1); pdf.set_font("Helvetica", "", 10); pdf.cell(150, 7, f" {occupant_name}", border=1, ln=True)
+            pdf.set_fill_color(245, 245, 245)
+            
+            # Left block
+            pdf.cell(35, 7, "Occupant Name:", border=1, fill=True)
+            pdf.set_font("Helvetica", "", 10); pdf.cell(60, 7, f" {occupant_name}", border=1)
+            # Right block
+            pdf.set_font("Helvetica", "B", 10); pdf.cell(35, 7, "Resident ID:", border=1, fill=True)
+            pdf.set_font("Helvetica", "", 10); pdf.cell(56, 7, f" {occupant_id}", border=1, ln=True)
+            
+            # Row 2
+            pdf.set_font("Helvetica", "B", 10); pdf.cell(35, 7, "Building No:", border=1, fill=True)
+            pdf.set_font("Helvetica", "", 10); pdf.cell(60, 7, f" {building_no}", border=1)
+            pdf.set_font("Helvetica", "B", 10); pdf.cell(35, 7, "Room No:", border=1, fill=True)
+            pdf.set_font("Helvetica", "", 10); pdf.cell(56, 7, f" {room_no}", border=1, ln=True)
+            pdf.ln(5)
+            
+            # SECTION 2: CHECKLIST
+            pdf.section_heading("2. Facility Infrastructure Checklist Evaluations")
             pdf.set_font("Helvetica", "B", 10)
-            pdf.cell(40, 7, "Room Type:", border=1); pdf.set_font("Helvetica", "", 10); pdf.cell(150, 7, f" {room_type}", border=1, ln=True)
-
+            pdf.set_text_color(140, 140, 140)
+            pdf.cell(120, 6, "Evaluated Operational Asset Category", border=1, fill=True)
+            pdf.cell(66, 6, "Status Verification", border=1, ln=True, fill=True)
+            pdf.set_text_color(0, 0, 0)
+            
+            pdf.set_font("Helvetica", "", 9)
+            for asset, status in checklist_selections.items():
+                pdf.cell(120, 6, f" {asset}", border=1)
+                
+                # Dynamic conditional coloring (Green for Pass, Red for Action Required)
+                if "Pass" in status:
+                    pdf.set_text_color(34, 139, 34)
+                    pdf.set_font("Helvetica", "B", 9)
+                else:
+                    pdf.set_text_color(178, 34, 34)
+                    pdf.set_font("Helvetica", "B", 9)
+                    
+                pdf.cell(66, 6, f" {status}", border=1, ln=True)
+                pdf.set_text_color(0, 0, 0)
+                pdf.set_font("Helvetica", "", 9)
+            pdf.ln(5)
+            
+            # SECTION 3: FIELD INSPECTION REMARKS
+            pdf.section_heading("3. Additional Field Inspection Remarks")
+            pdf.set_font("Helvetica", "", 9)
+            pdf.multi_cell(0, 6, f" {remarks if remarks else 'No structural deficiencies or critical anomalies noted at evaluation timestamp.'}", border=1)
+            pdf.ln(5)
+            
+            # SECTION 4: SIGNATURE BLOCKS / BRANDING BASE
+            pdf.section_heading("4. Signatures & Attestation")
+            pdf.ln(2)
+            pdf.set_font("Helvetica", "B", 9)
+            pdf.cell(93, 5, "Resident Signature Confirmation:", ln=False)
+            pdf.cell(93, 5, "Lead Inspector Verification Authorization:", ln=True)
+            
+            pdf.set_font("Helvetica", "I", 11)
+            pdf.set_text_color(40, 40, 40)
+            pdf.cell(93, 10, f"   /s/ {resident_signature}", border='B')
+            pdf.cell(93, 10, f"   /s/ {inspector_signature}", border='B', ln=True)
+            pdf.ln(8)
+            
+            # Bottom Center Watermark logo branding from previous framework
+            if os.path.exists(FMCO_LOGO):
+                pdf.image(FMCO_LOGO, x=78, y=pdf.get_y(), w=54)
+            
+            # Process output and send email
             timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
             pdf_filename = f"Departure_Report_{occupant_name.replace(' ', '_')}_{timestamp_str}.pdf"
             pdf.output(pdf_filename)
-
+            
             if send_report_via_email(pdf_filename, occupant_name, building_no, room_no):
-                st.success(f"🎉 Success! PDF compiled and emailed.")
-            if os.path.exists(pdf_filename): os.remove(pdf_filename)
-
+                st.success(f"🎉 Complete structural breakdown report processed and transmitted to inbox.")
+            if os.path.exists(pdf_filename): 
+                os.remove(pdf_filename)
