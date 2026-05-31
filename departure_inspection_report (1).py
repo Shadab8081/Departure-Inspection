@@ -128,7 +128,7 @@ with logo_col1:
 with logo_col2:
     st.markdown("<h2 style='text-align: center; color: #0E384A; margin-top: 10px;'>Departure Inspection Report</h2>", unsafe_allow_html=True)
 with logo_col3:
-    if os.path.exists(QIDDIYA_LOGO): st.image(QIDDIYA_LOGO, width=120)
+    if os.path.exists(QIDDIYA_LOGO): st.image(QIDDIYA_LOGO, width=140)
 
 st.markdown("---")
 
