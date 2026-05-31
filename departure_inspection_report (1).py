@@ -23,14 +23,14 @@ from datetime import datetime
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 SENDER_EMAIL = "mdshadabk318@gmail.com"
-SENDER_PASSWORD = "your-16-character-app-password"  # Replace with your App Password
+SENDER_PASSWORD = "sqrt ahgl mrgx zidd"  # Replace with your App Password
 RECEIVER_EMAIL = "housing.lp@qiddiya.fmco.sa"
 
 FMCO_LOGO = "FMCO-Logo-2.png"
 QIDDIYA_LOGO = "images (1).png"
 
 # 🔗 PASTE YOUR GOOGLE WEB APP URL DIRECTLY HERE:
-GOOGLE_WEBAPP_URL = "PASTE_YOUR_SCRIPT_URL_HERE"
+GOOGLE_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzI-LfL3556Jhx53MsbbG2yOgaPn63D0patc19otNoSmDtNU5mVvtOQ43MV3y3p6dy65w/execE"
 
 # ==========================================
 # FUNCTION: LOG DATA TO GOOGLE SHEETS
