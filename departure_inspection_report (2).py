@@ -214,7 +214,7 @@ with logo_col2:
         unsafe_allow_html=True
     )
 with logo_col3:
-    if os.path.exists(QIDDIYA_LOGO): st.image(QIDDIYA_LOGO, width=100)
+    if os.path.exists(QIDDIYA_LOGO): st.image(QIDDIYA_LOGO, width=95)
 
 st.markdown("---")
 
