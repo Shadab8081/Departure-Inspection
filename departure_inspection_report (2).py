@@ -218,12 +218,6 @@ with logo_col3:
 
 st.markdown("---")
 
-# Info banner explaining storage
-st.info(
-    "📁 **How reports are stored:** Each submitted report is saved as a PDF inside "
-    f"`{BASE_REPORTS_FOLDER} / YYYY-MM / DD-Month-YYYY /`. "
-    "No emails are sent — all records live in this folder and the Google Sheet."
-)
 
 with st.form("departure_form", clear_on_submit=True):
     st.subheader("🏢 Location & Occupant Core Attributes")
