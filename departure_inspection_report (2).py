@@ -206,7 +206,7 @@ st.set_page_config(page_title="Departure Inspection Form", page_icon="📝", lay
 
 logo_col1, logo_col2, logo_col3 = st.columns([1.2, 2, 1.2])
 with logo_col1:
-    if os.path.exists(FMCO_LOGO): st.image(FMCO_LOGO, width=140)
+    if os.path.exists(FMCO_LOGO): st.image(FMCO_LOGO, width=120)
 with logo_col2:
     st.markdown(
         "<h2 style='text-align:center;color:#0E384A;margin-top:15px;"
@@ -214,7 +214,7 @@ with logo_col2:
         unsafe_allow_html=True
     )
 with logo_col3:
-    if os.path.exists(QIDDIYA_LOGO): st.image(QIDDIYA_LOGO, width=140)
+    if os.path.exists(QIDDIYA_LOGO): st.image(QIDDIYA_LOGO, width=120)
 
 st.markdown("---")
 
