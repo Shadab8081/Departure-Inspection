@@ -223,7 +223,7 @@ with st.form("departure_form", clear_on_submit=True):
     st.subheader("🏢 Location & Occupant Core Attributes")
     col1, col2 = st.columns(2)
     with col1:
-        occupant_name = st.text_input("Occupant Full Name", placeholder="e.g. Noor")
+        occupant_name = st.text_input("Occupant Full Name", placeholder="e.g. Shadab")
         building_no   = st.text_input("Building Number",    placeholder="e.g. C02")
     with col2:
         occupant_id   = st.text_input("Resident ID / Serial", placeholder="e.g. 1234")
