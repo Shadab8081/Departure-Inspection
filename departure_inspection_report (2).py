@@ -9,7 +9,7 @@ from PIL import Image
 # 1. CONFIGURATION & CORPORATE CONSTANTS
 # ==========================================
 FMCO_LOGO = "FMCO-Logo-2.png"
-QIDDIYA_LOGO = "images (1).png"
+QIDDIYA_LOGO = "qiddiya-city-logo-png_seeklogo-358620.png"
 
 # 🔗 Google Sheets Web App URL
 GOOGLE_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxaHygGj3K14MJrlP5HNa9zmIbl4CzSgaIio0VnRh_rc3F2gL43aYqcnvzRsDhaSbnq/exec"
