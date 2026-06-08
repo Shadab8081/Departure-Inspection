@@ -9,7 +9,7 @@ from PIL import Image
 # 1. CONFIGURATION & CORPORATE CONSTANTS
 # ==========================================
 FMCO_LOGO = "FMCO-Logo-2.png"
-QIDDIYA_LOGO = "qiddiya-city-logo-png_seeklogo-358620.png"
+QIDDIYA_LOGO = "images (1).png"
 
 # 🔗 Google Sheets Web App URL
 GOOGLE_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxaHygGj3K14MJrlP5HNa9zmIbl4CzSgaIio0VnRh_rc3F2gL43aYqcnvzRsDhaSbnq/exec"
@@ -87,7 +87,7 @@ class DepartureReportPDF(FPDF):
         self.set_y(-15)
         self.set_font("Helvetica", "I", 8)
         self.set_text_color(150, 150, 150)
-        self.cell(0, 10, f"Page {self.page_no()}/{{nb}} | FMCO Operations Logistics Hub", align="C")
+        self.cell(0, 10, f"Page {self.page_no()}/{{nb}}", align="C")
 
     def section_heading(self, label):
         self.set_font("Helvetica", "B", 11)
@@ -214,7 +214,7 @@ with logo_col2:
         unsafe_allow_html=True
     )
 with logo_col3:
-    if os.path.exists(QIDDIYA_LOGO): st.image(QIDDIYA_LOGO, width=95)
+    if os.path.exists(QIDDIYA_LOGO): st.image(QIDDIYA_LOGO, width=120)
 
 st.markdown("---")
 
