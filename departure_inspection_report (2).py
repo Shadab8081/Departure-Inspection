@@ -214,7 +214,7 @@ with logo_col2:
         unsafe_allow_html=True
     )
 with logo_col3:
-    if os.path.exists(QIDDIYA_LOGO): st.image(QIDDIYA_LOGO, width=95)
+    if os.path.exists(QIDDIYA_LOGO): st.image(QIDDIYA_LOGO, width=120)
 
 st.markdown("---")
 
@@ -223,11 +223,11 @@ with st.form("departure_form", clear_on_submit=True):
     st.subheader("🏢 Location & Occupant Core Attributes")
     col1, col2 = st.columns(2)
     with col1:
-        occupant_name = st.text_input("Occupant Full Name", placeholder="e.g. Shadab")
-        building_no   = st.text_input("Building Number",    placeholder="e.g. C02")
+        occupant_name = st.text_input("Occupant Full Name")
+        building_no   = st.text_input("Building Number")
     with col2:
-        occupant_id   = st.text_input("Resident ID / Serial", placeholder="e.g. 1234")
-        room_no       = st.text_input("Room Number",          placeholder="e.g. 112")
+        occupant_id   = st.text_input("Resident ID / Serial")
+        room_no       = st.text_input("Room Number")
 
     col_r1, col_r2 = st.columns(2)
     with col_r1:
